@@ -6,6 +6,7 @@ import operator
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
+import asyncio
 
 import os
 import dotenv
@@ -26,6 +27,7 @@ async def get_subdomains(domain):
     """
     Retrieve a list of subdomains.
     """
+    print(domain)
 
     if not domain or not isinstance(domain, str):
         raise ValueError("Domain is required and must be a string.")
@@ -186,8 +188,7 @@ def get_anomalies(domain):
 
     anomalies = html.select("tr:has(td:nth-child(6)):not(:first-child)")
 
-    sure_self_signed = {}
-    probably_self_signed = {}
+    self_signed = {}
     expired = {}
 
     for row in anomalies:
@@ -211,47 +212,68 @@ def get_anomalies(domain):
             
             # Fetch certificate details to check if self-signed
             try:
-                cert_details = search(os.getenv("BASE_URL") + "/?d=" + cert_id)
-                cert_html = BeautifulSoup(cert_details, "html.parser")
-                
-                # Extract issuer and subject information
-                cert_text = cert_html.get_text()
-                
-                issuer_start = cert_text.find("Issuer:")
-                subject_start = cert_text.find("Subject:")
-                
-                if issuer_start != -1 and subject_start != -1:
-                    # Extract issuer line
-                    issuer_end = cert_text.find("\n", issuer_start)
-                    issuer = cert_text[issuer_start:issuer_end].replace("Issuer:", "").strip()
-                    
-                    # Extract subject line
-                    subject_end = cert_text.find("\n", subject_start)
-                    subject = cert_text[subject_start:subject_end].replace("Subject:", "").strip()
-                    
-                    cert_info = {
+                certificatCompany = row.find_all("a")[1].get_text(strip=True).split("O=")[1].split(",")[0].replace('"', '')
+
+                print(certificatCompany)
+
+                selfSignedList = ["Let's Encrypt"]
+
+                # Check if the certificate company is in the self-signed list
+                if certificatCompany in selfSignedList:
+                    self_signed[domain_name] = {
                         "id": cert_id,
                         "logged_at": row.find_all('td')[1].get_text(strip=True),
                         "not_before": row.find_all('td')[2].get_text(strip=True),
                         "not_after": not_after,
-                        "issuer": issuer,
-                        "subject": subject
+                        "issuer": certificatCompany
                     }
-                    
-                    # Check if self-signed (issuer == subject)
-                    if issuer == subject:
-                        sure_self_signed[domain_name] = cert_info
-                    elif any(common_part in issuer and common_part in subject 
-                           for common_part in ["CN=", "O=", "OU="] 
-                           if common_part in issuer and common_part in subject):
-                        probably_self_signed[domain_name] = cert_info
-                        
             except Exception:
                 # Skip if certificate details cannot be fetched
                 continue
 
     return {
-        "sure self-signed": sure_self_signed,
-        "probably self-signed": probably_self_signed,
+        "self-signed": self_signed,
         "expired": expired
     }
+
+class OrderedDomainsRequest(BaseModel):
+    domains: Optional[list] = []
+
+@router.post("/aggregate")
+async def aggregate_domains(body: OrderedDomainsRequest):
+    """
+    Affregate domains from the request body.
+    """
+    
+    try:
+        print(body)
+        domains = body.domains
+
+        print(domains)
+        
+        if not isinstance(domains, list) or not all(isinstance(domain, str) for domain in domains):
+            raise ValueError("Domains must be a list of strings.")
+        
+        batch_size = 5
+        aggregated_domains = []
+        
+        for i in range(0, len(domains), batch_size):
+            batch = domains[i:i + batch_size]
+            
+            # Process batch in parallel
+            batch_results = await asyncio.gather(*[get_subdomains(domain) for domain in batch])
+            
+            # Add results
+            aggregated_domains.extend([
+                {"domain": domain, "subdomains": subdomains} 
+                for domain, subdomains in zip(batch, batch_results)
+            ])
+            
+            # Wait 20s between batches (except last one)
+            if i + batch_size < len(domains):
+                await asyncio.sleep(60)
+        
+        return {"aggregated_domains": aggregated_domains}
+    
+    except Exception as e:
+        raise ValueError(f"Error processing request: {e}")
