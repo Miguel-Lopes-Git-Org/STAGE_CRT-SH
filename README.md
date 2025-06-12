@@ -77,7 +77,7 @@ crt-sh-api/
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd "crt.sh API"
+cd "crt.sh"
 
 # Install dependencies
 pip install -r requirements.txt
