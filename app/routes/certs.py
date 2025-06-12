@@ -253,7 +253,7 @@ class CertificateSearchRequest(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "examples": {
                 "sha256_search": {
                     "summary": "Search by SHA-256 fingerprint",

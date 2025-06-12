@@ -4,7 +4,6 @@
   <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" alt="FastAPI">
   <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="MIT License">
 </p>
 
 A powerful **FastAPI-based REST API** for interacting with the **crt.sh Certificate Transparency database**. This API provides comprehensive certificate information, subdomain enumeration, security analysis, and certificate transparency insights.
@@ -98,6 +97,23 @@ docker run -p 8000:8000 crtsh-api
 - **API Endpoints**: `http://localhost:8000`
 - **Interactive Documentation**: `http://localhost:8000/docs`
 - **OpenAPI Schema**: `http://localhost:8000/openapi.json`
+
+---
+
+## 🔑 API Key & Environment Configuration
+
+To access any API endpoint, you must provide a valid API key.  
+The `.env` file **must be configured** with your API key as follows:
+
+```
+API_KEY=your_secret_api_key
+```
+
+You must include this key in your requests using the HTTP header:
+
+```
+X-API-KEY: your_secret_api_key
+```
 
 ---
 
@@ -451,14 +467,6 @@ LOG_LEVEL=INFO
 ### 🚦 Built-in Rate Limiting
 - **Batch Processing**: 5 domains per batch
 - **Inter-batch Delay**: 60 seconds between batches
-- **Automatic Retry**: Intelligent retry on rate limit errors
-- **Parallel Processing**: Concurrent requests within batches
-
-### ⚡ Performance Features
-- **Async Processing**: Non-blocking I/O operations
-- **Connection Pooling**: Efficient HTTP connection management
-- **Response Caching**: Intelligent caching for repeated requests
-- **Error Recovery**: Automatic retry with exponential backoff
 
 ---
 
@@ -552,65 +560,6 @@ python -m pytest tests/ --cov=app --cov-report=html
 
 ---
 
-## 🤝 Contributing
+## 👥 Authors
 
-### Development Setup
-```bash
-# Clone and setup
-git clone <repository-url>
-cd "crt.sh API"
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements-dev.txt
-
-# Run in development mode
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Contribution Guidelines
-1. 🍴 **Fork** the repository
-2. 🌿 **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. ✨ **Make** your changes with proper documentation
-4. 🧪 **Add** tests for new functionality
-5. ✅ **Ensure** all tests pass
-6. 📝 **Commit** your changes (`git commit -m 'Add amazing feature'`)
-7. 🚀 **Push** to the branch (`git push origin feature/amazing-feature`)
-8. 📬 **Open** a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
----
-
-## ⚠️ Disclaimer
-
-This tool is designed for **legitimate security research** and **authorized testing** purposes only. Users are responsible for:
-
-- 🔒 **Compliance** with applicable laws and regulations
-- 📋 **Respecting** crt.sh terms of service
-- 🎯 **Using** the tool only on domains you own or have permission to test
-- 🚫 **Not overloading** the crt.sh service with excessive requests
-
----
-
-## 📞 Support
-
-- 📧 **Email**: [support@yourapi.com](mailto:support@yourapi.com)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/your-repo/crtsh-api/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/your-repo/crtsh-api/discussions)
-- 📖 **Documentation**: [API Docs](http://localhost:8000/docs)
-
----
-
-<p align="center">
-  <strong>Made with ❤️ for the cybersecurity community</strong>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/github/stars/your-repo/crtsh-api?style=social" alt="GitHub stars">
-  <img src="https://img.shields.io/github/forks/your-repo/crtsh-api?style=social" alt="GitHub forks">
-  <img src="https://img.shields.io/github/watchers/your-repo/crtsh-api?style=social" alt="GitHub watchers">
-</p>
+Made by Miguel LOPES and Clément DUMAS
