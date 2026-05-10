@@ -1,5 +1,5 @@
-# Use the official Python image version 3.13.3 as the base
-FROM python:3.13.3-slim
+# Use a Python version compatible with the pinned dependencies.
+FROM python:3.12-slim
 
 # Set the working directory inside the container to /app
 WORKDIR /app
