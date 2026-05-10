@@ -1,0 +1,55 @@
+name: Deploy production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy on self-hosted server
+    runs-on: self-hosted
+    environment: prod
+
+    env:
+      IMAGE_NAME: crtsh-api
+      CONTAINER_NAME: crtsh-api
+      APP_PORT: ${{ vars.APP_PORT || '1009' }}
+      BASE_URL: ${{ vars.BASE_URL || 'https://crt.sh' }}
+      API_KEY: ${{ secrets.API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate production configuration
+        shell: bash
+        run: |
+          test -n "$API_KEY"
+          test -n "$BASE_URL"
+
+      - name: Build Docker image
+        shell: bash
+        run: docker build -t "$IMAGE_NAME:${{ github.sha }}" -t "$IMAGE_NAME:latest" .
+
+      - name: Deploy container
+        shell: bash
+        run: |
+          docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+          docker run -d \
+            --name "$CONTAINER_NAME" \
+            --restart unless-stopped \
+            -p "$APP_PORT:8000" \
+            -e API_KEY="$API_KEY" \
+            -e BASE_URL="$BASE_URL" \
+            "$IMAGE_NAME:${{ github.sha }}"
+
+      - name: Verify API is protected
+        shell: bash
+        run: |
+          sleep 5
+          status_without_key="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${APP_PORT}/docs")"
+          test "$status_without_key" = "401"
+          status_with_key="$(curl -s -o /dev/null -w '%{http_code}' -H "X-API-KEY: ${API_KEY}" "http://127.0.0.1:${APP_PORT}/openapi.json")"
+          test "$status_with_key" = "200"

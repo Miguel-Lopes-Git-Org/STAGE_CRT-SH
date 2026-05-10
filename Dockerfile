@@ -1,5 +1,5 @@
 # Use the official Python image version 3.13.3 as the base
-FROM python:3.13.3
+FROM python:3.13.3-slim
 
 # Set the working directory inside the container to /app
 WORKDIR /app
@@ -8,10 +8,10 @@ WORKDIR /app
 COPY . /app
 
 # Install the Python dependencies listed in requirements.txt
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose port 8000 to allow access from outside the container
 EXPOSE 8000
 
 # Start the FastAPI application, listening on all network interfaces (0.0.0.0) at port 8000
-CMD ["fastapi","run"]
+CMD ["python", "-m", "uvicorn", "main:app", "--app-dir", "app", "--host", "0.0.0.0", "--port", "8000"]
