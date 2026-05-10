@@ -17,6 +17,11 @@ app = FastAPI(
 )
 
 
+@app.get("/health", include_in_schema=False)
+async def health_check():
+    return {"status": "ok"}
+
+
 @app.get("/openapi.json", include_in_schema=False)
 async def protected_openapi(api_key: str = Depends(auth.validate_docs_api_key)):
     return get_openapi(
