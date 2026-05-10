@@ -48,8 +48,19 @@ jobs:
       - name: Verify API is protected
         shell: bash
         run: |
-          sleep 5
+          for attempt in {1..30}; do
+            health_status="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${APP_PORT}/health" || true)"
+            if [ "$health_status" = "200" ]; then
+              break
+            fi
+            sleep 1
+          done
+          test "$health_status" = "200" || (docker logs "$CONTAINER_NAME" && exit 1)
           status_without_key="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${APP_PORT}/docs")"
-          test "$status_without_key" = "401"
           status_with_key="$(curl -s -o /dev/null -w '%{http_code}' -H "X-API-KEY: ${API_KEY}" "http://127.0.0.1:${APP_PORT}/openapi.json")"
-          test "$status_with_key" = "200"
+          if [ "$status_without_key" != "401" ] || [ "$status_with_key" != "200" ]; then
+            echo "Unexpected status without key: $status_without_key"
+            echo "Unexpected status with key: $status_with_key"
+            docker logs "$CONTAINER_NAME"
+            exit 1
+          fi
