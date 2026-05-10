@@ -254,29 +254,23 @@ class CertificateSearchRequest(BaseModel):
     
     class Config:
         json_schema_extra = {
-            "examples": {
-                "sha256_search": {
-                    "summary": "Search by SHA-256 fingerprint",
-                    "value": {
-                        "search": "SHA256",
-                        "value": "1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF"
-                    }
+            "examples": [
+                {
+                    "search": "SHA256",
+                    "value": (
+                        "1234567890ABCDEF1234567890ABCDEF"
+                        "1234567890ABCDEF1234567890ABCDEF"
+                    ),
                 },
-                "organization_search": {
-                    "summary": "Search by organization",
-                    "value": {
-                        "search": "organisation",
-                        "value": "Google Inc"
-                    }
+                {
+                    "search": "organisation",
+                    "value": "Google Inc",
                 },
-                "ca_search": {
-                    "summary": "Search by Certificate Authority",
-                    "value": {
-                        "search": "CA",
-                        "value": "16418"
-                    }
-                }
-            }
+                {
+                    "search": "CA",
+                    "value": "16418",
+                },
+            ]
         }
 
 @router.post(
